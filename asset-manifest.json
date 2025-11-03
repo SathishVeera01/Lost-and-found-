@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/Lost-and-found-/static/css/main.0a786655.css",
+    "main.js": "/Lost-and-found-/static/js/main.f58ac12a.js",
+    "index.html": "/Lost-and-found-/index.html",
+    "main.0a786655.css.map": "/Lost-and-found-/static/css/main.0a786655.css.map",
+    "main.f58ac12a.js.map": "/Lost-and-found-/static/js/main.f58ac12a.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.0a786655.css",
+    "static/js/main.f58ac12a.js"
+  ]
+}
