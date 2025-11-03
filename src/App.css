@@ -1,0 +1,250 @@
+/* src/App.css - Complete unified theme for SignIn, OTP, Dashboard, Forms, Lists */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-a: #f5f7fa;
+  --bg-b: #cbdced;
+  --card-bg: #ffffff;
+  --muted: #6f7f88;
+  --accent: #3498db;
+  --green: #27ae60;
+  --danger: #e74c3c;
+  --glass-shadow: 0 10px 30px rgba(34,49,63,0.08);
+  --soft-shadow: 0 6px 20px rgba(34,49,63,0.06);
+  --radius-lg: 16px;
+  --radius-sm: 10px;
+  --max-width: 1100px;
+}
+
+/* Page */
+html, body, #root { height: 100%; }
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  background: linear-gradient(135deg, var(--bg-a) 0%, var(--bg-b) 100%);
+  color: #22303a;
+}
+
+/* App wrapper */
+.App {
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 36px 20px;
+}
+
+/* Generic page container */
+.page {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+/* ---------- SignIn ---------- */
+.login-container {
+  width: 100%;
+  max-width: 920px;
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 28px;
+  align-items: center;
+  padding: 18px;
+}
+.signin-hero { padding: 8px 22px; }
+.sign-in-title { font-size: 3rem; color: #12222b; letter-spacing: -0.6px; margin-bottom: 6px; }
+.sign-in-sub { color: var(--muted); font-size: 1rem; margin-top: 6px; }
+
+.sign-in-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), var(--card-bg));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+  padding: 22px;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.auto-email { background: #f3f7fb; padding: 10px 12px; border-radius: 10px; color: var(--muted); font-style: italic; font-size: 0.94rem; display:inline-block; }
+
+/* Input row used on SignIn and OTP verify */
+.input-row {
+  display: flex;
+  width: 100%;
+  gap: 10px;
+  margin-top: 12px;
+  align-items: center;
+}
+
+/* General inputs */
+.email-field, .otp-input, .form-input, textarea.form-textarea {
+  flex: 1 1 auto;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #d7e1ea;
+  font-size: 1rem;
+  color: #22303a;
+  background: linear-gradient(180deg,#fff,#fbfdff);
+  transition: box-shadow .14s ease, border-color .14s ease;
+  min-width: 0;
+}
+
+/* OTP input narrower */
+.otp-input { max-width: 260px; }
+
+/* Focus states */
+.email-field:focus, .otp-input:focus, .form-input:focus, textarea.form-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 8px 28px rgba(52,152,219,0.10);
+}
+
+/* Buttons - global */
+.btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform .12s ease, box-shadow .12s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-primary {
+  background: linear-gradient(90deg, var(--accent), #5dade2);
+  color: white;
+  box-shadow: 0 10px 24px rgba(52,152,219,0.10);
+}
+.btn-primary:hover { transform: translateY(-3px); box-shadow: 0 18px 36px rgba(52,152,219,0.12); }
+.btn-secondary { background: #95a5a6; color: white; }
+.btn-ghost { background: transparent; color: var(--muted); border: 1px solid rgba(0,0,0,0.06); }
+
+/* ---------- OTP Card ---------- */
+.otp-card {
+  max-width: 640px;
+  margin: 24px auto;
+  padding: 22px;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+}
+.otp-title { font-size: 2.6rem; margin-bottom: 6px; color: #172a3a; }
+.otp-sub { color: var(--muted); margin-bottom: 12px; }
+
+/* ---------- Dashboard ---------- */
+.dashboard {
+  padding: 36px 20px;
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+.dashboard-header { display:flex; align-items:center; justify-content:space-between; gap: 16px; margin-bottom: 18px; }
+.dashboard-title { font-size: 2.4rem; color: #172a3a; }
+.welcome { color: var(--muted); font-size: 1rem; }
+
+/* Button group */
+.button-group { display:flex; gap:12px; margin:10px 0 22px; flex-wrap:wrap; }
+.report-btn { padding: 10px 18px; border-radius: 999px; cursor:pointer; border:none; font-weight:600; box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+.lost-btn { background: linear-gradient(135deg, #e74c3c, #c0392b); color:white; }
+.found-btn { background: linear-gradient(135deg, #27ae60, #2ecc71); color:white; }
+
+/* Item list */
+.item-list { display: grid; gap: 12px; margin-top: 12px; }
+.item-card { background: var(--card-bg); padding: 14px; border-radius: 12px; box-shadow: var(--soft-shadow); display:flex; gap:12px; align-items:center; justify-content:space-between; }
+.item-info { flex:1; }
+.item-title { font-weight:700; color:#172a3a; margin-bottom:4px; }
+.item-meta { color:var(--muted); font-size:0.95rem; }
+
+/* ---------- Form container ---------- */
+.form-container {
+  background: var(--card-bg);
+  padding: 22px;
+  border-radius: 14px;
+  box-shadow: var(--glass-shadow);
+  max-width: 760px;
+  margin: 22px auto;
+}
+.form-container h2 { font-size: 1.6rem; margin-bottom: 10px; color:#172a3a; }
+.form-row { display:flex; gap:10px; align-items:center; margin-top:8px; }
+.form-input { padding:10px 12px; border-radius:10px; border:1px solid #d6e1ea; }
+.form-textarea { min-height:120px; padding:12px; border-radius:10px; resize:vertical; }
+
+/* helper bubble */
+.helper-bubble { background:#f3f7fb; padding:10px 14px; border-radius:12px; color:var(--muted); display:inline-block; }
+
+/* footer small text */
+.small-muted { font-size:0.92rem; color:var(--muted); margin-top:8px; }
+
+/* Responsive */
+@media (max-width: 880px) {
+  .login-container { grid-template-columns: 1fr; gap: 18px; padding: 14px; }
+  .signin-hero { text-align:left; }
+  .input-row { flex-direction:column; align-items:stretch; }
+  .email-field, .otp-input { width:100%; }
+  .dashboard { padding: 20px; }
+  .form-row { flex-direction: column; align-items:stretch; }
+}
+
+/* ---------- Send OTP button (used in Login.js) ---------- */
+.send-otp-btn {
+  padding: 12px 20px;
+  background: linear-gradient(90deg, var(--accent), #5dade2);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(52,152,219,0.10);
+  transition: transform .12s ease, box-shadow .12s ease;
+  flex-shrink: 0;
+}
+
+.send-otp-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px rgba(52,152,219,0.12);
+}
+
+/* ---------- Hover + active effects for buttons ---------- */
+
+/* Ghost button (Logout) */
+.btn-ghost {
+  background: rgba(206, 200, 200, 0.35);
+  color: #34495e;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.7);
+  color: #2c3e50;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.btn-ghost:active {
+  transform: translateY(1px);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Report buttons (Lost / Found) */
+.report-btn {
+  transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.15s ease;
+}
+
+.report-btn:hover {
+  transform: translateY(-3px);
+  opacity: 0.95;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.report-btn:active {
+  transform: translateY(1px);
+  opacity: 1;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+}
+button, .btn, .report-btn {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
