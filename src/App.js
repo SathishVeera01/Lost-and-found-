@@ -283,12 +283,12 @@ function App() {
     }
   };
 
-  // if (!user) {
-  //   if (otp) {
-  //     return <OTPVerify verifyOTP={verifyOTP} />;
-  //   }
-  //   return <Login generateOTP={generateOTP} />;
-  // }
+  if (!user) {
+    if (otp) {
+      return <OTPVerify verifyOTP={verifyOTP} />;
+    }
+    return <Login generateOTP={generateOTP} />;
+  }
   // 🔧 Skip OTP flow for testing (auto-login after entering email)
   if (!user) {
     return <Login generateOTP={(email) => setUser(email)} />;
