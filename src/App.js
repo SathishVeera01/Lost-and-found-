@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { createClient } from "@supabase/supabase-js";
 import emailjs from "@emailjs/browser";
 import "./App.css";
@@ -11,7 +11,6 @@ import ReportFoundForm from "./components/ReportFoundForm";
 // Supabase config - keep your values
 const supabaseUrl = "https://ujcztdmoqewwbjzzddcv.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqY3p0ZG1vcWV3d2JqenpkZGN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0NzM0NjgsImV4cCI6MjA3NzA0OTQ2OH0.V8ExgI__o4gIqQQtM80DkFqcM8qNg1bxQhbxBSBfHmw";
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 // EmailJS config (keep your service/template/user ids)
 const EMAILJS_SERVICE = "service_zmxi13e";
@@ -27,6 +26,23 @@ function App() {
   const [foundItems, setFoundItems] = useState([]);
   const [currentView, setCurrentView] = useState("dashboard");
   const [formData, setFormData] = useState({ description: "", regNo: "", phone: "" });
+
+  // Initialize Supabase client once to avoid multiple instances
+  const supabase = useMemo(() => {
+    return createClient(supabaseUrl, supabaseKey);
+  }, []);
+
+  // Test Supabase connectivity on app load
+  useEffect(() => {
+    console.log("Testing Supabase connectivity...");
+    fetch("https://ujcztdmoqewwbjzzddcv.supabase.co/rest/v1/")
+      .then((res) => {
+        console.log("Supabase ping status:", res.status);
+        return res.text();
+      })
+      .then((text) => console.log("Supabase ping response:", text))
+      .catch((err) => console.error("Supabase connectivity error:", err));
+  }, []);
 
   // Load from Supabase on mount
   useEffect(() => {
@@ -144,48 +160,80 @@ function App() {
     e.preventDefault();
     console.log("Submitting lost item:", formData);
     try {
-      // Insert and request returning row
-      const { data: inserted, error: insertError } = await supabase
-        .from("lost_items")
-        .insert([
-          {
-            description: formData.description,
-            owner: user,
-            reporter_reg_no: formData.regNo,
-            reporter_phone: formData.phone,
+      // Insert and request returning row - using direct REST API
+      console.log("inside try");
+      console.log("Calling Supabase REST API directly...");
+      
+      const response = await fetch(
+        "https://ujcztdmoqewwbjzzddcv.supabase.co/rest/v1/lost_items",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": supabaseKey,
+            "Authorization": `Bearer ${supabaseKey}`,
+            "Prefer": "return=representation"
           },
-        ])
-        .select();
-      if (insertError) throw insertError;
-      console.log("Lost item inserted into Supabase:", inserted);
-
-      // Fetch found items (current)
-      const { data: foundData } = await supabase.from("found_items").select("*");
+          body: JSON.stringify([
+            {
+              description: formData.description,
+              owner: user,
+              reporter_reg_no: formData.regNo,
+              reporter_phone: formData.phone,
+            },
+          ]),
+        }
+      );
+      
+      console.log("Response status:", response.status);
+      const data = await response.json();
+      console.log("Response data:", data);
+      
+      if (!response.ok) {
+        throw new Error(`Supabase error: ${response.status} - ${JSON.stringify(data)}`);
+      }
+      
+      console.log("Lost item inserted successfully!");
+      
+      // Fetch found items and check for matches
+      console.log("Checking found items for match...");
+      const foundResponse = await fetch(
+        "https://ujcztdmoqewwbjzzddcv.supabase.co/rest/v1/found_items",
+        {
+          method: "GET",
+          headers: {
+            "apikey": supabaseKey,
+            "Authorization": `Bearer ${supabaseKey}`,
+          },
+        }
+      );
+      const foundData = await foundResponse.json();
       console.log("Checking found items for match:", foundData);
 
       const lostTokens = tokenize(formData.description);
 
-      // Find best match by token overlap
+      // Find best match by token overlap (at least 50% of words must match)
       let bestMatch = null;
       let bestScore = 0;
       (foundData || []).forEach((found) => {
         const foundTokens = tokenize(found.description);
         const score = foundTokens.filter((t) => lostTokens.includes(t)).length;
-        if (score > bestScore) {
-          bestScore = score;
+        const matchPercentage = foundTokens.length > 0 ? (score / foundTokens.length) * 100 : 0;
+        if (matchPercentage > bestScore) {
+          bestScore = matchPercentage;
           bestMatch = found;
         }
       });
 
-      console.log("Best match (score):", bestMatch, bestScore);
-      if (bestMatch && bestScore >= 1) {
-        // Notify the finder (found.reporter_email)
+      console.log("Best match (match percentage):", bestMatch, bestScore + "%");
+      if (bestMatch && bestScore >= 50) {
+        // Notify the finder about matching lost item (if 50% or more words match)
         try {
           await sendMatchNotification(
             bestMatch.reporter_email,
             "lost_match",
             bestMatch.description, // description of the found item
-            user, // lost reporter email (you)
+            user, // lost reporter email
             formData.regNo,
             formData.phone
           );
@@ -196,11 +244,7 @@ function App() {
       } else {
         console.log("No match found for lost item:", formData.description);
       }
-
-      // Refresh state arrays (replace, avoid duplicates)
-      const { data: lostData } = await supabase.from("lost_items").select("*");
-      setLostItems(lostData || []);
-
+      
       alert("Lost item reported!");
       setCurrentView("dashboard");
       setFormData({ description: "", regNo: "", phone: "" });
@@ -217,47 +261,79 @@ function App() {
     e.preventDefault();
     console.log("Submitting found item:", formData);
     try {
-      // Insert and request returning row
-      const { data: inserted, error: insertError } = await supabase
-        .from("found_items")
-        .insert([
-          {
-            description: formData.description,
-            reporter_email: user,
-            reporter_reg_no: formData.regNo,
-            reporter_phone: formData.phone,
+      // Insert and request returning row - using direct REST API
+      console.log("inside try");
+      console.log("Calling Supabase REST API directly...");
+      
+      const response = await fetch(
+        "https://ujcztdmoqewwbjzzddcv.supabase.co/rest/v1/found_items",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": supabaseKey,
+            "Authorization": `Bearer ${supabaseKey}`,
+            "Prefer": "return=representation"
           },
-        ])
-        .select();
-      if (insertError) throw insertError;
-      console.log("Found item inserted into Supabase:", inserted);
-
-      // Fetch lost items (current)
-      const { data: lostData } = await supabase.from("lost_items").select("*");
+          body: JSON.stringify([
+            {
+              description: formData.description,
+              reporter_email: user,
+              reporter_reg_no: formData.regNo,
+              reporter_phone: formData.phone,
+            },
+          ]),
+        }
+      );
+      
+      console.log("Response status:", response.status);
+      const data = await response.json();
+      console.log("Response data:", data);
+      
+      if (!response.ok) {
+        throw new Error(`Supabase error: ${response.status} - ${JSON.stringify(data)}`);
+      }
+      
+      console.log("Found item inserted successfully!");
+      
+      // Fetch lost items and check for matches
+      console.log("Checking lost items for match...");
+      const lostResponse = await fetch(
+        "https://ujcztdmoqewwbjzzddcv.supabase.co/rest/v1/lost_items",
+        {
+          method: "GET",
+          headers: {
+            "apikey": supabaseKey,
+            "Authorization": `Bearer ${supabaseKey}`,
+          },
+        }
+      );
+      const lostData = await lostResponse.json();
       console.log("Checking lost items for match:", lostData);
 
       const foundTokens = tokenize(formData.description);
 
-      // Find best match by token overlap
+      // Find best match by token overlap (at least 50% of words must match)
       let bestMatch = null;
       let bestScore = 0;
       (lostData || []).forEach((lost) => {
         const lostTokens = tokenize(lost.description);
         const score = lostTokens.filter((t) => foundTokens.includes(t)).length;
-        if (score > bestScore) {
-          bestScore = score;
+        const matchPercentage = lostTokens.length > 0 ? (score / lostTokens.length) * 100 : 0;
+        if (matchPercentage > bestScore) {
+          bestScore = matchPercentage;
           bestMatch = lost;
         }
       });
 
-      console.log("Best match (score):", bestMatch, bestScore);
-      if (bestMatch && bestScore >= 1) {
-        // Notify the owner (lost reporter owner)
+      console.log("Best match (match percentage):", bestMatch, bestScore + "%");
+      if (bestMatch && bestScore >= 50) {
+        // Notify the lost item owner about matching found item (if 50% or more words match)
         try {
           await sendMatchNotification(
             bestMatch.owner,
             "found_match",
-            foundItems.length ? formData.description : formData.description, // found item desc
+            formData.description, // found item desc
             user, // finder email
             formData.regNo,
             formData.phone
@@ -269,11 +345,7 @@ function App() {
       } else {
         console.log("No match found for found item:", formData.description);
       }
-
-      // Refresh found items state (replace, avoid duplicates)
-      const { data: newFoundData } = await supabase.from("found_items").select("*");
-      setFoundItems(newFoundData || []);
-
+      
       alert("Found item reported!");
       setCurrentView("dashboard");
       setFormData({ description: "", regNo: "", phone: "" });
@@ -283,12 +355,12 @@ function App() {
     }
   };
 
-  if (!user) {
-    if (otp) {
-      return <OTPVerify verifyOTP={verifyOTP} />;
-    }
-    return <Login generateOTP={generateOTP} />;
-  }
+  // if (!user) {
+  //   if (otp) {
+  //     return <OTPVerify verifyOTP={verifyOTP} />;
+  //   }
+  //   return <Login generateOTP={generateOTP} />;
+  // }
   // 🔧 Skip OTP flow for testing (auto-login after entering email)
   if (!user) {
     return <Login generateOTP={(email) => setUser(email)} />;
